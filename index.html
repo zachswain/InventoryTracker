@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html>
-  <script type="text/javascript">
+
+  <body>
+    Hello world!
+    
+    <button id="authorize_button" style="display: none;">Authorize</button>
+    <button id="signout_button" style="display: none;">Sign Out</button>
+
+    <pre id="content" style="white-space: pre-wrap;"></pre>
+
+    <script type="text/javascript">
     var CLIENT_ID = "471936584888-br1egs0hun6f83iffercuv8ro5oi66vl.apps.googleusercontent.com";
     var API_KEY = "AIzaSyCtk02z-CkJtPO1JwyRK8OE1qjj6SGG9cI";
     
@@ -69,17 +78,9 @@
       pre.appendChild(textContent);
     }
   </script>
-  <body>
-    Hello world!
-    
-    <button id="authorize_button" style="display: none;">Authorize</button>
-    <button id="signout_button" style="display: none;">Sign Out</button>
-
-    <pre id="content" style="white-space: pre-wrap;"></pre>
-    
-    <script async defer src="https://apis.google.com/js/api.js"
-      onload="this.onload=function(){};handleClientLoad()"
-      onreadystatechange="if (this.readyState === 'complete') this.onload()">
-    </script>
+  <script async defer src="https://apis.google.com/js/api.js"
+    onload="this.onload=function(){};handleClientLoad()"
+    onreadystatechange="if (this.readyState === 'complete') this.onload()">
+  </script>
   </body>
 </html>
