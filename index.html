@@ -48,11 +48,32 @@
       if (isSignedIn) {
         authorizeButton.style.display = 'none';
         signoutButton.style.display = 'block';
-        listMajors();
+        listInventory();
       } else {
         authorizeButton.style.display = 'block';
         signoutButton.style.display = 'none';
       }
+    }
+     
+    function listInventory() {
+      gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId: '1geP9ZsGIu25jU8LMTOydBCBXmKeIGZeRNv-hdNd9GM4',
+          range: 'PrimaryInventory!A2:D',
+        }).then(function(response) {
+          var range = response.result;
+          if (range.values.length > 0) {
+            appendPre('Name, Price:');
+            for (i = 0; i < range.values.length; i++) {
+              var row = range.values[i];
+              // Print columns A and E, which correspond to indices 0 and 4.
+              appendPre(row[0] + ', ' + row[2]);
+            }
+          } else {
+            appendPre('No data found.');
+          }
+        }, function(response) {
+          appendPre('Error: ' + response.result.error.message);
+        });
     }
 
     function handleAuthClick(event) {
