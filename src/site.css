@@ -1,0 +1,30 @@
+.bottom-navbar {
+    background-color: #e3f2fd;
+}
+
+.add-new-inventory-btn {
+    bottom: 65px;
+    right: 25px;
+}
+
+.thumbnail-container {
+    position: relative;
+    width: 64px;
+    height: 64px;
+}
+
+.thumbnail {
+    width: 64px;
+    height: 64px;
+}
+
+.video-capture {
+  box-shadow: 2px 2px 3px black;
+  width:320px;
+  height:240px;
+  background: red;
+}
+
+.ms-n5 {
+    margin-left: -40px;
+}
