@@ -25,13 +25,16 @@ Object.assign(module.exports, {
         return item;
     },
     
-    async findAll() {
+    async findAll(args = {}) {
         var model = Database.getModel(this.modelName);
-        return model.findAll({ include : { all : true, nested : true } });
+        if( args  == null ) {
+            args = { include : { all : true, nested : true } }
+        }
+        return model.findAll(args);
     },
     
     async getModel() {
-        var model = Database.getModel(this.modelName);
+        var model = await Database.getModel(this.modelName);
         return model;
     }
 });

@@ -1,5 +1,6 @@
 var m = require("mithril");
-var FilterSuggestionModel = require("../../models/FilterSuggestionModel")
+var FilterSuggestionModel = require("../../models/FilterSuggestionModel");
+var InventoryFilterModel = require("../../models/InventoryFilterModel");
 
 var FilterSuggestionComponent = {
     view : function(vnode) {
@@ -11,7 +12,9 @@ var FilterSuggestionComponent = {
                     ])
                     : (FilterSuggestionModel.suggestions && FilterSuggestionModel.suggestions.length>0)
                         ? FilterSuggestionModel.suggestions.map(function(suggestion) {
-                            return m("li", { class : "list-group-item" }, [
+                            return m("li", { class : "list-group-item list-group-item-action", "onclick" : function(e) {
+                                InventoryFilterModel.filterText = suggestion;
+                            } }, [
                                 suggestion
                             ])
                         })

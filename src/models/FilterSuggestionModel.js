@@ -16,11 +16,15 @@ var FilterSuggestionModel = {
                     url : "/api/suggest/" + phrase,
                     method : "GET"
                 }).then(function(results) {
-                    FilterSuggestionModel.suggestions = [ "a", "b", "c" ];
-                    resolve(FilterSuggestionModel.suggestions);
+                    if( results && results.status && results.status=="success" ) {
+                        FilterSuggestionModel.suggestions = results.results;
+                        resolve(FilterSuggestionModel.suggestions);
+                    } else {
+                        reject();
+                    }
                     FilterSuggestionModel.loading = false;
                 }).catch(function(err) {
-                    return err;
+                    reject(err);
                 })
             }, 500);
         })

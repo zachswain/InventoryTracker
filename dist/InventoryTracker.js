@@ -33988,11 +33988,15 @@ var FilterSuggestionModel = {
                     url : "/api/suggest/" + phrase,
                     method : "GET"
                 }).then(function(results) {
-                    FilterSuggestionModel.suggestions = [ "a", "b", "c" ];
-                    resolve(FilterSuggestionModel.suggestions);
+                    if( results && results.status && results.status=="success" ) {
+                        FilterSuggestionModel.suggestions = results.results;
+                        resolve(FilterSuggestionModel.suggestions);
+                    } else {
+                        reject();
+                    }
                     FilterSuggestionModel.loading = false;
                 }).catch(function(err) {
-                    return err;
+                    reject(err);
                 })
             }, 500);
         })
@@ -34013,8 +34017,37 @@ module.exports = FilterSuggestionModel;
 var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
 
 var InventoryFilterModel = {
-    filterText : null
+    filterText : null,
+    
+    matchesItem : function(item) {
+        if( !item ) return false;
+        
+        if( !InventoryFilterModel.filterText ) return true;
+        
+        if( InventoryFilterModel.filterText.indexOf(":")!=-1 ) {
+            var tag = InventoryFilterModel.filterText.split(":")[0].trim();
+            var value = InventoryFilterModel.filterText.split(":")[1].trim();
+            
+            for( var i=0 ; i<item.tags.length ; i++ ) {
+                if( item.tags[i].tagDefinition.label.toLowerCase().trim()==tag.toLowerCase().trim() && item.tags[i].value.toLowerCase().trim()==value.toLowerCase().trim() ) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        if( item.name && !item.name.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
+            return true;
+        }
+        
+        if( item.description && !item.description.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
+            return true;
+        }
+    }
 }
+
+module.exports = InventoryFilterModel;
 
 /***/ }),
 
@@ -35003,7 +35036,8 @@ module.exports = BottomNavBar;
 /***/ (function(module, exports, __webpack_require__) {
 
 var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
-var FilterSuggestionModel = __webpack_require__(/*! ../../models/FilterSuggestionModel */ "./src/models/FilterSuggestionModel.js")
+var FilterSuggestionModel = __webpack_require__(/*! ../../models/FilterSuggestionModel */ "./src/models/FilterSuggestionModel.js");
+var InventoryFilterModel = __webpack_require__(/*! ../../models/InventoryFilterModel */ "./src/models/InventoryFilterModel.js");
 
 var FilterSuggestionComponent = {
     view : function(vnode) {
@@ -35015,7 +35049,9 @@ var FilterSuggestionComponent = {
                     ])
                     : (FilterSuggestionModel.suggestions && FilterSuggestionModel.suggestions.length>0)
                         ? FilterSuggestionModel.suggestions.map(function(suggestion) {
-                            return m("li", { class : "list-group-item" }, [
+                            return m("li", { class : "list-group-item list-group-item-action", "onclick" : function(e) {
+                                InventoryFilterModel.filterText = suggestion;
+                            } }, [
                                 suggestion
                             ])
                         })
@@ -35091,46 +35127,50 @@ var InventoryListComponent = {
             : m("div", { class : "col position-relative" }, [
                 m("div", { class : "mt-4 list-group list-group-flush"}, [
                     InventoryModel.inventory.map(function(item) {
-                        if( InventoryFilterModel.filterText && InventoryFilterModel.filterText != "" ) {
-                            if( (item.name && !item.name.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()))  && (item.description && !item.description.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase())) ) {
-                                return [];
-                            }
-                        }
-                        return m("a", { class : "list-group-item list-group-item-action ", "href" : "#", "itemID" : item.id, "onclick" : function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log("selected");
-                            console.log(item.id);
-                            m.route.set("/editItem/:itemID", { itemID : item.id });
-                        } }, [
-                            m("div", { class : "row" }, [
-                                m("div", { class : "col-3" }, [
-                                    m("div", { class : "thumbnail position-relative bg-light", "style" : "width: 64px; height: 64px"}, [
-                                        item.thumbnail 
-                                            ? m("img", { "src" : "data:image/jpg ;base64, " + item.thumbnail }, [])
-                                            : m("i", { "class" : "fs-1 position-absolute top-50 start-50 translate-middle bi bi-question-circle" }, [])
+                        // if( InventoryFilterModel.filterText && InventoryFilterModel.filterText != "" ) {
+                        //     if( (item.name && !item.name.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()))  && (item.description && !item.description.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase())) ) {
+                        //         return [];
+                        //     }
+                        // }
+                        if( InventoryFilterModel.matchesItem(item) ) {
+                            return m("a", { class : "list-group-item list-group-item-action ", "href" : "#", "itemID" : item.id, "onclick" : function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log("selected");
+                                console.log(item.id);
+                                m.route.set("/editItem/:itemID", { itemID : item.id });
+                            } }, [
+                                m("div", { class : "row" }, [
+                                    m("div", { class : "col-3" }, [
+                                        m("div", { class : "thumbnail position-relative bg-light", "style" : "width: 64px; height: 64px"}, [
+                                            item.thumbnail 
+                                                ? m("img", { "src" : "data:image/jpg ;base64, " + item.thumbnail }, [])
+                                                : m("i", { "class" : "fs-1 position-absolute top-50 start-50 translate-middle bi bi-question-circle" }, [])
+                                        ]),
                                     ]),
-                                ]),
-                                m("div", { class : "col-9" }, [
-                                    m("div", { class : ""}, [
-                                        m("div", { class : "d-flex w-100 justify-content-between"}, [
-                                            m("h5", { class : "mb-1 text-truncate" }, [
-                                                item.name
+                                    m("div", { class : "col-9" }, [
+                                        m("div", { class : ""}, [
+                                            m("div", { class : "d-flex w-100 justify-content-between"}, [
+                                                m("h5", { class : "mb-1 text-truncate" }, [
+                                                    item.name
+                                                ]),
+                                                m("small", { }, [
+                                                    moment(item.createdAt).fromNow()
+                                                ])
                                             ]),
-                                            m("small", { }, [
-                                                moment(item.createdAt).fromNow()
+                                            m("p", { class : "mb-1 text-truncate" }, [
+                                                item.description
+                                            ]),
+                                            m("small", { class : "text-truncate" }, [
+                                                "Some smaller text"
                                             ])
-                                        ]),
-                                        m("p", { class : "mb-1 text-truncate" }, [
-                                            item.description
-                                        ]),
-                                        m("small", { class : "text-truncate" }, [
-                                            "Some smaller text"
                                         ])
                                     ])
                                 ])
                             ])
-                        ])
+                        } else {
+                            return [];
+                        }
                     })
                 ]),
                 m(AddNewInventoryItemComponent)
