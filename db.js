@@ -51,7 +51,7 @@ class Database {
 		  relationship.relationships.forEach(relatedTo => {
 		    var target = self._models[relatedTo.modelName];
 		    
-		    let options = {};
+		    let options = relationship.options || {};
 		    if( relatedTo.as ) {
 		    	options.as = relatedTo.as;
 		    }

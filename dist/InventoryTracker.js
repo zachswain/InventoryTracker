@@ -34037,11 +34037,11 @@ var InventoryFilterModel = {
             return false;
         }
         
-        if( item.name && !item.name.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
+        if( item.name && item.name.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
             return true;
         }
         
-        if( item.description && !item.description.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
+        if( item.description && item.description.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
             return true;
         }
     }
@@ -34132,7 +34132,7 @@ var InventoryItemModel = {
                     name : InventoryItemModel.name,
                     description : InventoryItemModel.description,
                     acquired_price : InventoryItemModel.acquired_price,
-                    acquired_dt : InventoryItemModel.acquired_dt,
+                    acquired_dt : moment(InventoryItemModel.acquired_dt),
                     
                     listed : InventoryItemModel.listed,
                     pending : InventoryItemModel.pending,
@@ -34593,7 +34593,7 @@ var EditItemView = {
                             m("input", { class : "form-control", "id" : "itemAcquiredPriceInput", "type" : "number", "placeholder" : "Price", "value" : InventoryItemModel.acquired_price, "oninput" : function(e) {
                                 InventoryItemModel.acquired_price = e.target.value;
                             } }, [ ]),
-                            m("input", { class : "form-control", "id" : "itemAcquiredDtInput", "placeholder" : "Date", "value" : moment(InventoryItemModel.acquired_dt).format("L"), "oninput" : function(e) {
+                            m("input", { class : "form-control", "id" : "itemAcquiredDtInput", "placeholder" : "Date", "value" : InventoryItemModel.acquired_dt, "oninput" : function(e) {
                                 InventoryItemModel.acquired_dt = e.target.value;
                             }}),
                             m("button", { class : "btn btn-outline-secondary", "onclick" : function(e) {

@@ -15,7 +15,7 @@ Object.assign(module.exports, {
     },
     
     relationships : [
-        { modelName : TagDefinition.modelName, relationship : "belongsTo", as : "tagDefinition" }
+        { modelName : TagDefinition.modelName, relationship : "belongsTo", as : "tagDefinition", options : { onDelete : "cascade" } }
     ],
     
     async create(args, options) {

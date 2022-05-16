@@ -21,11 +21,11 @@ var InventoryFilterModel = {
             return false;
         }
         
-        if( item.name && !item.name.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
+        if( item.name && item.name.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
             return true;
         }
         
-        if( item.description && !item.description.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
+        if( item.description && item.description.toLowerCase().match(InventoryFilterModel.filterText.toLowerCase()) ) {
             return true;
         }
     }

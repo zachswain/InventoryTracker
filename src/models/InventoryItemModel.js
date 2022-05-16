@@ -72,7 +72,7 @@ var InventoryItemModel = {
                     name : InventoryItemModel.name,
                     description : InventoryItemModel.description,
                     acquired_price : InventoryItemModel.acquired_price,
-                    acquired_dt : InventoryItemModel.acquired_dt,
+                    acquired_dt : moment(InventoryItemModel.acquired_dt),
                     
                     listed : InventoryItemModel.listed,
                     pending : InventoryItemModel.pending,

@@ -10,8 +10,7 @@ inventoryRouter.all("/GetInventory", async function(req, res) {
     var imgData = await sharp("./images/sample.jpg").resize({ width : 64, height : 64 }).toBuffer();
     
     var items = await Item.findAll();
-    
-    console.log(items);
+
     /*
     var inventory = [
         {
