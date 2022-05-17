@@ -11,7 +11,7 @@ class Database {
     
     this._sequelize = new Sequelize({
     	dialect: 'sqlite',
-    	storage: "./database.sqlite",
+    	storage: config.get("Database").file,
     	logging : console.log,
     	pool: {
           max: 5,

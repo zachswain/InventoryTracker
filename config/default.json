@@ -1,5 +1,14 @@
 {
+	"Server" : {
+		"certificate" : "./keys/server.cert",
+		"privateKey" : "./keys/server.key"
+	},
+	"GoogleAuthentication" : {
+		"clientId" : "471936584888-vocp9gvfm095o50iuoere0rhhj9v8fgo.apps.googleusercontent.com",
+		"clientSecret" : "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"
+	},
 	"Database" : {
-		"sync" : false
+		"sync" : false,
+		"file" : "./database.sqlite"
 	}
 }

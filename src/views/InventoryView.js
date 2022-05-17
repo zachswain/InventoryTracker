@@ -3,10 +3,13 @@ var InventoryFilterComponent = require("./components/InventoryFilterComponent");
 var InventoryListComponent = require("./components/InventoryListComponent");
 var InventoryModel = require("../models/InventoryModel");
 var BottomNavBar = require("./components/BottomNavBar");
-var AddNewInventoryItemComponent = require("./components/AddNewInventoryItemComponent");
+var AuthenticationModel = require("../models/AuthenticationModel");
 
 var InventoryView = {
     oninit : function(vnode) {
+        if( !AuthenticationModel.isAuthenticated() ) {
+            m.route.set("/login");
+        }
         InventoryModel.fetch();    
     },
     

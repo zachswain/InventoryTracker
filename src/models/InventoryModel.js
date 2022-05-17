@@ -1,11 +1,14 @@
 var m = require("mithril");
+var AuthenticationModel = require("../models/AuthenticationModel");
 
 var InventoryModel = {
     inventory : null,
     error : null,
     
     fetch : function() {
-        var data = {};
+        var data = {
+            token : AuthenticationModel.token
+        };
         
         console.log("InventoryModel fetch");
         
