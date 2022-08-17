@@ -1,5 +1,6 @@
 var m = require("mithril");
 var moment = require("moment");
+var AuthenticationModel = require("./AuthenticationModel");
 
 var InventoryItemModel = {
     name : null,
@@ -36,7 +37,7 @@ var InventoryItemModel = {
     load : function(id) {
         return m.request({
             method : "GET",
-            url : "/api/item/" + id,
+            url : "/api/item/" + id + "?token=" + AuthenticationModel.token,
         }).then(function(results) {
             if( results && results.status=="success" ) {
                 InventoryItemModel.id = results.item.id;
@@ -66,7 +67,7 @@ var InventoryItemModel = {
         if( InventoryItemModel.id == null ) {
             return m.request({
                 method : "PUT",
-                url : "/api/item/",
+                url : "/api/item/?token=" + AuthenticationModel.token,
                 contentType : "application/json",
                 body : {
                     name : InventoryItemModel.name,
@@ -92,7 +93,7 @@ var InventoryItemModel = {
         } else {
             return m.request({
                 method : "POST",
-                url : "/api/item/" + InventoryItemModel.id,
+                url : "/api/item/" + InventoryItemModel.id + "?token=" + AuthenticationModel.token,
                 contentType : "application/json",
                 body : {
                     name : InventoryItemModel.name,
@@ -120,7 +121,7 @@ var InventoryItemModel = {
     delete : function() {
         return m.request({
             method : "DELETE",
-            url : "/api/item/" + InventoryItemModel.id
+            url : "/api/item/" + InventoryItemModel.id + "?token=" + AuthenticationModel.token
         }).then(function(result) {
             InventoryItemModel.newItem()
             return result;

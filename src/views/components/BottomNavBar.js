@@ -14,6 +14,11 @@ var BottomNavBar = {
                         m(m.route.Link, { href : "/editTags" }, [
                             m("i", { class : "bi bi-tags" }, [])
                         ])
+                    ]),
+                    m("div", { class : "col" }, [
+                        m(m.route.Link, { href : "/configuration" }, [
+                            m("i", { class : "bi bi-gear-fill" }, [])
+                        ])
                     ])
                 ])
             ])

@@ -10,6 +10,10 @@ Object.assign(module.exports, {
     	email : {
     	    type : Sequelize.STRING,
     	    allowNull : false
+    	},
+    	access_type : {
+    	    type : Sequelize.STRING,
+    	   allowNull : false
     	}
     },
     
@@ -29,6 +33,11 @@ Object.assign(module.exports, {
             args = { include : { all : true, nested : true } }
         }
         return model.findAll(args);
+    },
+    
+    async findOneByEmail(email) {
+        var model = Database.getModel(this.modelName);
+        return model.findOne({ where : { email : email } });
     },
     
     async getModel() {

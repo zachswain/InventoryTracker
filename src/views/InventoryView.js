@@ -9,8 +9,9 @@ var InventoryView = {
     oninit : function(vnode) {
         if( !AuthenticationModel.isAuthenticated() ) {
             m.route.set("/login");
+        } else {
+            InventoryModel.fetch();    
         }
-        InventoryModel.fetch();    
     },
     
     view : function(vnode) {

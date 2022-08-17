@@ -1,17 +1,18 @@
 var m = require("mithril");
+var AuthenticationModel = require("./AuthenticationModel");
 
 var TagDefinitionModel = {
     loadAll : function() {
         return m.request({
             method : "GET",
-            url : "/api/tag/definitions"
+            url : "/api/tag/definitions?token=" + AuthenticationModel.token
         })
     },
     
     create : function() {
         return m.request({
             method : "PUT",
-            url : "/api/tag/definition/"
+            url : "/api/tag/definition/?token=" + AuthenticationModel.token
         });
     },
     
@@ -19,7 +20,7 @@ var TagDefinitionModel = {
         if( tagDefinition.id ) {
             return m.request({
                 method : "POST",
-                url : "/api/tag/definition/" + tagDefinition.id,
+                url : "/api/tag/definition/" + tagDefinition.id + "?token=" + AuthenticationModel.token,
                 body : {
                     label : tagDefinition.label,
                     type : tagDefinition.type,
@@ -37,7 +38,7 @@ var TagDefinitionModel = {
         if( tagDefinition.id ) {
             return m.request({
                 method : "DELETE",
-                url : "/api/tag/definition/" + tagDefinition.id
+                url : "/api/tag/definition/" + tagDefinition.id + "?token=" + AuthenticationModel.token
             });
         }
     }

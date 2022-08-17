@@ -6,6 +6,10 @@ var AuthenticationModel = {
 
     isAuthenticated : function() {
         return (AuthenticationModel.user!=null);
+    },
+    
+    unauthorizedAccess : function() {
+        m.route.set("/unauthorized");
     }
 }
 

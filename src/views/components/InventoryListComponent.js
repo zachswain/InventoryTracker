@@ -7,7 +7,10 @@ var moment = require("moment");
 var InventoryListComponent = {
     view : function(vnode) {
         return m("div", { class : "row pt-3" }, [
-            InventoryModel.inventory==null
+            InventoryModel.error!=null
+            // Error while loading the inventory
+            ? m.route.set("/unauthorized")
+            : InventoryModel.inventory==null
             // Hasn't been loaded yet, display loading message
             ? m("div", { class : "col" }, [
                 "Loading..."
@@ -48,9 +51,6 @@ var InventoryListComponent = {
                                             ]),
                                             m("p", { class : "mb-1 text-truncate" }, [
                                                 item.description
-                                            ]),
-                                            m("small", { class : "text-truncate" }, [
-                                                "Some smaller text"
                                             ])
                                         ])
                                     ])

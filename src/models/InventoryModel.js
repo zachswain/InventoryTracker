@@ -7,7 +7,6 @@ var InventoryModel = {
     
     fetch : function() {
         var data = {
-            token : AuthenticationModel.token
         };
         
         console.log("InventoryModel fetch");
@@ -15,15 +14,17 @@ var InventoryModel = {
         return m.request({
             method : "POST",
             body : data,
-            url : "/api/Inventory/GetInventory"
+            url : "/api/Inventory?token=" + AuthenticationModel.token
         }).then(function(results) {
             console.log("InventoryModel data fetched");
             console.log(results);
             if( results.status=="success" ) {
-                InventoryModel.inventory = results.results.inventory;
+                InventoryModel.inventory = results.results;
                 InventoryModel.error = null;
                 
                 console.log(InventoryModel.inventory);
+            } else if( results.status=="unauthorized") {
+                AuthenticationModel.unauthorizedAccess();
             } else {
                 InventoryModel.inventory = null;
                 InventoryModel.error = results.message;

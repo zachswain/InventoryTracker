@@ -5,6 +5,8 @@ const EditItemView = require("./views/EditItemView");
 const CapturePhotoView = require("./views/CapturePhotoView");
 const EditTagsView = require("./views/EditTagsView");
 const LoginView = require("./views/LoginView");
+const UnauthorizedAccessView = require("./views/UnauthorizedAccessView");
+const ConfigurationView = require("./views/ConfigurationView");
 const bootstrap = require("bootstrap");
 import 'bootstrap/dist/css/bootstrap.min.css';
 require('bootstrap-icons/font/bootstrap-icons.css');
@@ -16,5 +18,7 @@ m.route(document.body, "/", {
     "/capturePhoto" : CapturePhotoView,
     "/editItem/:itemID" : EditItemView,
     "/editTags" : EditTagsView,
-    "/login" : LoginView
+    "/login" : LoginView,
+    "/configuration" : ConfigurationView,
+    "/unauthorized" : UnauthorizedAccessView
 });

@@ -1,0 +1,1 @@
+alter table `Users` add column `access_type` VARCHAR(255) NOT NULL default 'User';

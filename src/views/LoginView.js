@@ -16,10 +16,10 @@ var LoginView = {
     },
     
     oncreate : function(vnode) {
-        // google.accounts.id.initialize({
-        //      client_id: keys.web.client_id,
-        //      callback: GoogleAuthentication.handleCredentialResponse
-        //  });
+        // window.google.accounts.id.initialize({
+        //   client_id: keys.web.client_id,
+        //   callback: window.handleCredentialResponse
+        // });
         // google.accounts.id.renderButton(
         //      document.getElementById("signinBtn"),
         //      { theme: "outline", size: "large" }  // customization attributes
