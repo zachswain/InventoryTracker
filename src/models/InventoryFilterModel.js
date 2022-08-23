@@ -1,10 +1,21 @@
 var m = require("mithril");
+var PreferencesModel = require("./PreferencesModel");
 
 var InventoryFilterModel = {
     filterText : null,
-    
+    hideFilters : false,
+
     matchesItem : function(item) {
         if( !item ) return false;
+        
+        if( (item.listed && PreferencesModel.hideListed) || 
+            (item.pending && PreferencesModel.hidePending) ||
+            (item.sold && PreferencesModel.hideSold) ||
+            (item.donated && PreferencesModel.hideDonated) ||
+            (item.disposed && PreferencesModel.hideDisposed) 
+            ) {
+            return false;
+        }
         
         if( !InventoryFilterModel.filterText ) return true;
         

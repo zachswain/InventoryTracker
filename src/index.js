@@ -7,10 +7,14 @@ const EditTagsView = require("./views/EditTagsView");
 const LoginView = require("./views/LoginView");
 const UnauthorizedAccessView = require("./views/UnauthorizedAccessView");
 const ConfigurationView = require("./views/ConfigurationView");
+const PreferencesModel = require("./models/PreferencesModel");
+const ReportsView = require("./views/ReportsView");
 const bootstrap = require("bootstrap");
 import 'bootstrap/dist/css/bootstrap.min.css';
 require('bootstrap-icons/font/bootstrap-icons.css');
 import './site.css';
+
+PreferencesModel.load();
 
 m.route(document.body, "/", {
     "/" : InventoryView,
@@ -20,5 +24,6 @@ m.route(document.body, "/", {
     "/editTags" : EditTagsView,
     "/login" : LoginView,
     "/configuration" : ConfigurationView,
+    "/reports" : ReportsView,
     "/unauthorized" : UnauthorizedAccessView
 });

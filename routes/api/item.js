@@ -150,4 +150,25 @@ itemRouter.delete("/:id", async function(req, res) {
     }
 });
 
+itemRouter.delete("/:id/tag/:tagId", async function(req, res) {
+    console.log("delete /api/item/:id/tag/:tagId route");
+    try
+    {
+        var id = req.params.id;
+        var tagId = req.params.tagId;
+       
+        var tag = await Tag.findByItemAndTagId(id, tagId);
+        
+        if( tag ) {
+            await tag.destroy();
+            res.json({ "status" : "success", "tag" : tag });
+        } else {
+            res.json({ "status" : "fail", "message" : "Unable to find a matching tag" })
+        }
+        
+    } catch( err ) {
+        res.json({ "status" : "error", "message" : err.message });
+    }
+})
+
 module.exports = itemRouter;

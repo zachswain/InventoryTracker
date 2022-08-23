@@ -1,4 +1,5 @@
 var m = require("mithril");
+var AuthenticationModel = require("./AuthenticationModel");
 
 var FilterSuggestionModel = {
     loading : false,
@@ -13,7 +14,7 @@ var FilterSuggestionModel = {
                 FilterSuggestionModel.show = true;
                 FilterSuggestionModel.loading = true;
                 m.request({
-                    url : "/api/suggest/" + phrase,
+                    url : "/api/suggest/" + phrase + "?token=" + AuthenticationModel.token,
                     method : "GET"
                 }).then(function(results) {
                     if( results && results.status && results.status=="success" ) {

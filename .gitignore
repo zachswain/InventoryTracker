@@ -1,4 +1,5 @@
 node_modules/
 keys/
 config/keys.json
+config/default.json
 *.sqlite

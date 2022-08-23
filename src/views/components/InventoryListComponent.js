@@ -2,6 +2,7 @@ var m = require("mithril");
 var InventoryModel = require("../../models/InventoryModel");
 var AddNewInventoryItemComponent = require("./AddNewInventoryItemComponent");
 var InventoryFilterModel = require("../../models/InventoryFilterModel");
+var PreferencesModel = require("../../models/PreferencesModel");
 var moment = require("moment");
 
 var InventoryListComponent = {
@@ -15,6 +16,48 @@ var InventoryListComponent = {
             ? m("div", { class : "col" }, [
                 "Loading..."
             ] )
+            : InventoryFilterModel.showFilters
+            ? m("div", { class : "col position-relative" }, [
+                m("div", { class : "mt-4" }, [ 
+                    m("label", { "for" : "showByStatusBtnGroup", class : "pt-3" }, [
+                                "Hide items with the following statuses:"
+                    ]),
+                    m("div", { class : "form-group" }, [
+                        m("div", { class : "btn-group", "id" : "hideByStatusBtnGroup", "role" : "group" }, [
+                            m("button", { class : "btn " + (PreferencesModel.hideListed ? "btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hideListed = !PreferencesModel.hideListed;
+                                PreferencesModel.save();
+                            }  }, [ "Listed" ]),
+                            m("button", { class : "btn " + (PreferencesModel.hidePending ? "btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hidePending = !PreferencesModel.hidePending;
+                                PreferencesModel.save();
+                            }  }, [ "Pending" ]),
+                            m("button", { class : "btn " + (PreferencesModel.hideSold ? "btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hideSold = !PreferencesModel.hideSold;
+                                PreferencesModel.save();
+                            }  }, [ "Sold" ]),
+                            m("button", { class : "btn " + (PreferencesModel.hideDonated ? "btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hideDonated = !PreferencesModel.hideDonated;
+                                PreferencesModel.save();
+                            }  }, [ "Donated" ]),
+                            m("button", { class : "btn " + (PreferencesModel.hideDisposed ? " btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hideDisposed = !PreferencesModel.hideDisposed;
+                                PreferencesModel.save();
+                            }  }, [ "Disposed" ])
+                        ])
+                    ]),
+                ])
+            ])
             : m("div", { class : "col position-relative" }, [
                 m("div", { class : "mt-4 list-group list-group-flush"}, [
                     InventoryModel.inventory.map(function(item) {

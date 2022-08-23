@@ -15,8 +15,12 @@ var InventoryFilterComponent = {
                         FilterSuggestionModel.suggest(InventoryFilterModel.filterText);
                     }, "onblur" : function(e) {
                         FilterSuggestionModel.show = false;
-                    } })
-                ])
+                    } }),
+                    m("button", { class : "btn btn-link", onclick : function(e) { InventoryFilterModel.showFilters = !InventoryFilterModel.showFilters; console.log(InventoryFilterModel.showFilters); m.redraw(); } }, [
+                        m("i", { class : "bi " + (InventoryFilterModel.showFilters ? "bi-funnel-fill" : "bi-funnel")})
+                    ])
+                ]),
+                    
             ]),
             m(FilterSuggestionComponent)
         ])

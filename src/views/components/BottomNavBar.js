@@ -17,9 +17,14 @@ var BottomNavBar = {
                     ]),
                     m("div", { class : "col" }, [
                         m(m.route.Link, { href : "/configuration" }, [
-                            m("i", { class : "bi bi-gear-fill" }, [])
+                            m("i", { class : "bi bi-gear" }, [])
                         ])
-                    ])
+                    ]),
+                    m("div", { class : "col" }, [
+                        m(m.route.Link, { href : "/reports" }, [
+                            m("i", { class : "bi bi-clipboard-data" }, [])
+                        ])
+                    ]),
                 ])
             ])
         ])

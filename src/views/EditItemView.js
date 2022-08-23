@@ -14,10 +14,7 @@ var EditItemView = {
         EditItemViewModel.initialized = false;
         
         console.log("EditItemView oninit");
-        console.log(vnode.attrs);
-        
 
-        
         if( !AuthenticationModel.isAuthenticated() ) {
             m.route.set("/login");
         } else {
@@ -209,9 +206,63 @@ var EditItemView = {
                             : [],
                             
                         // Tag Definitions
+                        m("div", { class : "form-group pt-3" }, [
+                            m("label", { }, [
+                                "Tags"
+                            ]),
+                        ]),
+                        
+                        InventoryItemModel.tags.map(function(tag, index, tags) {
+                           return (tag && tag.tagDefinition && tag.tagDefinition.active)
+                           ? m("div", { class : "input-group pt-3"}, [
+                                m("select", { class : "form-select", value : tag.tagDefinition.id, onchange : function(e) {
+                                    console.log(e.target.value);
+                                    for( var i=0 ; i<EditItemViewModel.tagDefinitions.length ; i++ ) {
+                                        if( EditItemViewModel.tagDefinitions[i].id==e.target.value ) {
+                                            console.log("setting tag definition");
+                                            console.log(EditItemViewModel.tagDefinitions[i]);
+                                            InventoryItemModel.tags[index].tagDefinition = EditItemViewModel.tagDefinitions[i];
+                                        }
+                                    }
+                                } }, [
+                                    EditItemViewModel.tagDefinitions.map(function(tagDefinition) {
+                                        return m("option", { "value" : tagDefinition.id, "type" : tagDefinition.label }, [ tagDefinition.label ])
+                                    })
+                                ]),
+                                // m("label", { "for" : tag.tagDefinition.label + "Input" }, [
+                                //     m("option", {}, [ tag.tagDefinition.label ])
+                                // ]),
+                                m("input", { class : "form-control", "id" : tag.tagDefinition.label + "Input", "data-label" : tag.tagDefinition.label, "placeholder" : "", "value" : tag.value, "oninput" : function(e) {
+                                    tag.value = e.target.value;
+                                } }, [ ]),
+                                m("button", { class : "btn btn-link" }, [
+                                    m("i", { class : "bi bi-x-circle-fill text-danger", onclick : function(e) {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        InventoryItemModel.tags.splice(index, 1);
+                                    } }, [])
+                                ])
+                            ])
+                            : [];
+                        }),
+                        
+                        // Only show 'Add Tags' buton if we have at least 1 tag definition
+                        (EditItemViewModel.tagDefinitions.length>0)
+                            ? m("button", { class : "btn btn-success mt-3", onclick : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                var tag = {
+                                    value : "",
+                                    tagDefinition : EditItemViewModel.tagDefinitions[0]
+                                }
+                                InventoryItemModel.addTag(tag);
+                            } }, [ "Add Tag" ])
+                            : [],
+                        /*
                         EditItemViewModel.tagDefinitions.map(function(tagDefinition) {
                             var tag = InventoryItemModel.getTagByTagDefinitionId(tagDefinition.id);
-                            if( !tag ) {
+                            // Use an empty name as a proxy for a new item to add tags by default.  For existing items, don't.
+                            if( !tag && InventoryItemModel.name==null ) {
                                 tag = {
                                     value : "",
                                     tagDefinition : tagDefinition
@@ -219,17 +270,27 @@ var EditItemView = {
                                 InventoryItemModel.addTag(tag);
                             }
                             
-                            return (tagDefinition.active
+                            return ( (tagDefinition.active && tag)
                             ? m("div", { class : "form-group pt-3"}, [
-                                    m("label", { "for" : tagDefinition.label + "Input" }, [
-                                        tagDefinition.label
-                                    ]),
+                                m("label", { "for" : tagDefinition.label + "Input" }, [
+                                    m("option", {}, [ tagDefinition.label ])
+                                ]),
+                                m("div", { class : "input-group" }, [
                                     m("input", { class : "form-control", "id" : tagDefinition.label + "Input", "data-label" : tagDefinition.label, "placeholder" : "", "value" : tag.value, "oninput" : function(e) {
                                         InventoryItemModel.setTagValue(tagDefinition.id, e.target.value);
-                                    } }, [ ])
+                                    } }, [ ]),
+                                    m("button", { class : "btn btn-link" }, [
+                                        m("i", { class : "bi bi-x-circle-fill text-danger", onclick : function(e) {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            InventoryItemModel.deleteTag(tag);
+                                        } }, [])
+                                    ])
                                 ])
+                            ])
                             : []);
                         }),
+                        */
                         
                         // Photos
                         m("div", { class : "form-group pt-3" }, [

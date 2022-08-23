@@ -33,6 +33,15 @@ Object.assign(module.exports, {
         return model.findAll(args);
     },
     
+    async findByItemAndTagId(itemId, tagId, args = null) {
+        var model = Database.getModel(this.modelName);
+        if( args == null ) {
+            args = { include : { all : true, nested : true } }
+        }
+        args.where = { id : tagId, ItemId : itemId };
+        return model.findOne(args);
+    },
+    
     async getModel() {
         var model = await Database.getModel(this.modelName);
         return model;

@@ -90233,10 +90233,14 @@ const EditTagsView = __webpack_require__(/*! ./views/EditTagsView */ "./src/view
 const LoginView = __webpack_require__(/*! ./views/LoginView */ "./src/views/LoginView.js");
 const UnauthorizedAccessView = __webpack_require__(/*! ./views/UnauthorizedAccessView */ "./src/views/UnauthorizedAccessView.js");
 const ConfigurationView = __webpack_require__(/*! ./views/ConfigurationView */ "./src/views/ConfigurationView.js");
+const PreferencesModel = __webpack_require__(/*! ./models/PreferencesModel */ "./src/models/PreferencesModel.js");
+const ReportsView = __webpack_require__(/*! ./views/ReportsView */ "./src/views/ReportsView.js");
 const bootstrap = __webpack_require__(/*! bootstrap */ "./node_modules/bootstrap/dist/js/bootstrap.esm.js");
 
 __webpack_require__(/*! bootstrap-icons/font/bootstrap-icons.css */ "./node_modules/bootstrap-icons/font/bootstrap-icons.css");
 
+
+PreferencesModel.load();
 
 mithril__WEBPACK_IMPORTED_MODULE_0___default.a.route(document.body, "/", {
     "/" : InventoryView,
@@ -90246,6 +90250,7 @@ mithril__WEBPACK_IMPORTED_MODULE_0___default.a.route(document.body, "/", {
     "/editTags" : EditTagsView,
     "/login" : LoginView,
     "/configuration" : ConfigurationView,
+    "/reports" : ReportsView,
     "/unauthorized" : UnauthorizedAccessView
 });
 
@@ -90338,6 +90343,7 @@ module.exports = EditTagsViewModel;
 /***/ (function(module, exports, __webpack_require__) {
 
 var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
+var AuthenticationModel = __webpack_require__(/*! ./AuthenticationModel */ "./src/models/AuthenticationModel.js");
 
 var FilterSuggestionModel = {
     loading : false,
@@ -90352,7 +90358,7 @@ var FilterSuggestionModel = {
                 FilterSuggestionModel.show = true;
                 FilterSuggestionModel.loading = true;
                 m.request({
-                    url : "/api/suggest/" + phrase,
+                    url : "/api/suggest/" + phrase + "?token=" + AuthenticationModel.token,
                     method : "GET"
                 }).then(function(results) {
                     if( results && results.status && results.status=="success" ) {
@@ -90382,12 +90388,23 @@ module.exports = FilterSuggestionModel;
 /***/ (function(module, exports, __webpack_require__) {
 
 var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
+var PreferencesModel = __webpack_require__(/*! ./PreferencesModel */ "./src/models/PreferencesModel.js");
 
 var InventoryFilterModel = {
     filterText : null,
-    
+    hideFilters : false,
+
     matchesItem : function(item) {
         if( !item ) return false;
+        
+        if( (item.listed && PreferencesModel.hideListed) || 
+            (item.pending && PreferencesModel.hidePending) ||
+            (item.sold && PreferencesModel.hideSold) ||
+            (item.donated && PreferencesModel.hideDonated) ||
+            (item.disposed && PreferencesModel.hideDisposed) 
+            ) {
+            return false;
+        }
         
         if( !InventoryFilterModel.filterText ) return true;
         
@@ -90434,6 +90451,8 @@ var InventoryItemModel = {
     description : null,
     acquired_price : null,
     acquired_dt : null,
+    listed : false,
+    pending : false,
     sold : false,
     donated : false,
     disposed : false,
@@ -90447,6 +90466,9 @@ var InventoryItemModel = {
         InventoryItemModel.acquired_price = null;
         InventoryItemModel.acquired_dt = null;
         
+        InventoryItemModel.listed = false;
+        InventoryItemModel.pending = false;
+        InventoryItemModel.pending_notes = null;
         InventoryItemModel.sold = false;
         InventoryItemModel.sold_price = null;
         InventoryItemModel.sold_dt = null;
@@ -90473,6 +90495,9 @@ var InventoryItemModel = {
                 InventoryItemModel.acquired_price = results.item.acquired_price;
                 InventoryItemModel.acquired_dt = moment(results.item.acquired_dt).format("L");
                 
+                InventoryItemModel.listed = results.item.listed;
+                InventoryItemModel.pending = results.item.pending;
+                InventoryItemModel.pending_notes = results.item.pending_notes;
                 InventoryItemModel.sold = results.item.sold;
                 InventoryItemModel.sold_price = results.item.sold_price;
                 InventoryItemModel.sold_dt = moment(results.item.sold_dt).format("L");
@@ -90557,7 +90582,7 @@ var InventoryItemModel = {
     
     getTagByTagDefinitionId : function(id) {
         for( var i=0 ; i<InventoryItemModel.tags.length ; i++ ) {
-            if( InventoryItemModel.tags[i].tagDefinition.id == id ) {
+            if( InventoryItemModel.tags[i].tagDefinition && InventoryItemModel.tags[i].tagDefinition.id == id ) {
                 return InventoryItemModel.tags[i];
             }
         }
@@ -90569,16 +90594,16 @@ var InventoryItemModel = {
         InventoryItemModel.tags.push(tag);
     },
     
-    setTagValue : function(tagDefinitionId, value) {
-        for( var i=0 ; i<InventoryItemModel.tags.length ; i++ ) {
-            if( InventoryItemModel.tags[i].tagDefinition.id == tagDefinitionId ) {
-                InventoryItemModel.tags[i].value = value;
-                return;
-            }
-        }
-        
-        console.log(InventoryItemModel.tags);
-    }
+    deleteTag : function(tag) {
+        return m.request({
+            method : "DELETE",
+            url : "/api/item/" + InventoryItemModel.id + "/tag/" + tag.id + "?token=" + AuthenticationModel.token
+        }).then(function(result) {
+            console.log(result);
+        }).catch(function(e) {
+            console.log(e);
+        })
+    },
 };
 
 module.exports = InventoryItemModel;
@@ -90665,6 +90690,87 @@ var PhotosModel = {
 };
 
 module.exports = PhotosModel;
+
+/***/ }),
+
+/***/ "./src/models/PreferencesModel.js":
+/*!****************************************!*\
+  !*** ./src/models/PreferencesModel.js ***!
+  \****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
+
+var PreferencesModel = {
+    hideListed : null,
+    hidePending : null,
+    hideSold : null,
+    hideDisposed : null,
+    hideDonated : null,
+    
+    init : function() {
+        console.log("Initializing user preferences");
+        PreferencesModel.hideListed = false;
+        PreferencesModel.hidePending = false;
+        PreferencesModel.hideSold = true;
+        PreferencesModel.hideDisposed = true;
+        PreferencesModel.hideDonated = true;
+        
+        console.log(PreferencesModel);
+        
+        PreferencesModel.save();
+    },
+    
+    save : function() {
+        console.log("Saving user preferences cookie");
+        var preferences = {
+            hideListed : PreferencesModel.hideListed,
+            hidePending : PreferencesModel.hidePending,
+            hideSold : PreferencesModel.hideSold,
+            hideDisposed : PreferencesModel.hideDisposed,
+            hideDonated : PreferencesModel.hideDonated,
+        };
+        var json = JSON.stringify(preferences);
+        var expiration = new Date("1-1-2100");
+        var name = "preferences";
+        
+        document.cookie = name + "=" + escape(json) + "; expires=" + expiration.toGMTString() + "; path=/";
+        
+        console.log(document.cookie);
+        
+        console.log("User preferences cookie saved");
+    },
+    
+    load : function() {
+        console.log("Loading user preferences from cookies");
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var cookies  = decodedCookie.split(';');
+  
+        for(var i = 0; i <cookies.length; i++) {
+            var cookie = cookies[i].trim();
+    
+            if (cookie.indexOf("preferences=") == 0) {
+                console.log("Found user preferences cookie: " + cookie);
+                var json = cookie.substring("preferences=".length, cookie.length);
+                var preferences = JSON.parse(json);
+                PreferencesModel.hideListed = preferences.hideListed;
+                PreferencesModel.hidePending = preferences.hidePending;
+                PreferencesModel.hideSold = preferences.hideSold;
+                PreferencesModel.hideDisposed = preferences.hideDisposed;
+                PreferencesModel.hideDonated = preferences.hideDonated;
+                
+                return;
+            }
+        }
+        
+        console.log("No user preference cookie found, initializing");
+        
+        PreferencesModel.init();
+    }
+};
+
+module.exports = PreferencesModel;
 
 /***/ }),
 
@@ -90932,10 +91038,7 @@ var EditItemView = {
         EditItemViewModel.initialized = false;
         
         console.log("EditItemView oninit");
-        console.log(vnode.attrs);
-        
 
-        
         if( !AuthenticationModel.isAuthenticated() ) {
             m.route.set("/login");
         } else {
@@ -91127,9 +91230,63 @@ var EditItemView = {
                             : [],
                             
                         // Tag Definitions
+                        m("div", { class : "form-group pt-3" }, [
+                            m("label", { }, [
+                                "Tags"
+                            ]),
+                        ]),
+                        
+                        InventoryItemModel.tags.map(function(tag, index, tags) {
+                           return (tag && tag.tagDefinition && tag.tagDefinition.active)
+                           ? m("div", { class : "input-group pt-3"}, [
+                                m("select", { class : "form-select", value : tag.tagDefinition.id, onchange : function(e) {
+                                    console.log(e.target.value);
+                                    for( var i=0 ; i<EditItemViewModel.tagDefinitions.length ; i++ ) {
+                                        if( EditItemViewModel.tagDefinitions[i].id==e.target.value ) {
+                                            console.log("setting tag definition");
+                                            console.log(EditItemViewModel.tagDefinitions[i]);
+                                            InventoryItemModel.tags[index].tagDefinition = EditItemViewModel.tagDefinitions[i];
+                                        }
+                                    }
+                                } }, [
+                                    EditItemViewModel.tagDefinitions.map(function(tagDefinition) {
+                                        return m("option", { "value" : tagDefinition.id, "type" : tagDefinition.label }, [ tagDefinition.label ])
+                                    })
+                                ]),
+                                // m("label", { "for" : tag.tagDefinition.label + "Input" }, [
+                                //     m("option", {}, [ tag.tagDefinition.label ])
+                                // ]),
+                                m("input", { class : "form-control", "id" : tag.tagDefinition.label + "Input", "data-label" : tag.tagDefinition.label, "placeholder" : "", "value" : tag.value, "oninput" : function(e) {
+                                    tag.value = e.target.value;
+                                } }, [ ]),
+                                m("button", { class : "btn btn-link" }, [
+                                    m("i", { class : "bi bi-x-circle-fill text-danger", onclick : function(e) {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        InventoryItemModel.tags.splice(index, 1);
+                                    } }, [])
+                                ])
+                            ])
+                            : [];
+                        }),
+                        
+                        // Only show 'Add Tags' buton if we have at least 1 tag definition
+                        (EditItemViewModel.tagDefinitions.length>0)
+                            ? m("button", { class : "btn btn-success mt-3", onclick : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                var tag = {
+                                    value : "",
+                                    tagDefinition : EditItemViewModel.tagDefinitions[0]
+                                }
+                                InventoryItemModel.addTag(tag);
+                            } }, [ "Add Tag" ])
+                            : [],
+                        /*
                         EditItemViewModel.tagDefinitions.map(function(tagDefinition) {
                             var tag = InventoryItemModel.getTagByTagDefinitionId(tagDefinition.id);
-                            if( !tag ) {
+                            // Use an empty name as a proxy for a new item to add tags by default.  For existing items, don't.
+                            if( !tag && InventoryItemModel.name==null ) {
                                 tag = {
                                     value : "",
                                     tagDefinition : tagDefinition
@@ -91137,17 +91294,27 @@ var EditItemView = {
                                 InventoryItemModel.addTag(tag);
                             }
                             
-                            return (tagDefinition.active
+                            return ( (tagDefinition.active && tag)
                             ? m("div", { class : "form-group pt-3"}, [
-                                    m("label", { "for" : tagDefinition.label + "Input" }, [
-                                        tagDefinition.label
-                                    ]),
+                                m("label", { "for" : tagDefinition.label + "Input" }, [
+                                    m("option", {}, [ tagDefinition.label ])
+                                ]),
+                                m("div", { class : "input-group" }, [
                                     m("input", { class : "form-control", "id" : tagDefinition.label + "Input", "data-label" : tagDefinition.label, "placeholder" : "", "value" : tag.value, "oninput" : function(e) {
                                         InventoryItemModel.setTagValue(tagDefinition.id, e.target.value);
-                                    } }, [ ])
+                                    } }, [ ]),
+                                    m("button", { class : "btn btn-link" }, [
+                                        m("i", { class : "bi bi-x-circle-fill text-danger", onclick : function(e) {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            InventoryItemModel.deleteTag(tag);
+                                        } }, [])
+                                    ])
                                 ])
+                            ])
                             : []);
                         }),
+                        */
                         
                         // Photos
                         m("div", { class : "form-group pt-3" }, [
@@ -91444,7 +91611,7 @@ var LoginView = {
     view : function(vnode) {
         return [
             m("script", { "src" : "https://accounts.google.com/gsi/client", "async" : "", "defer" : "" }, []),
-            m("div", { "id" : "g_id_onload", "data-client_id" : keys.web.client_id, "data-callback" : "handleCredentialResponse", "data-auto_prompt" : false}, []), //"data-login_uri" : "/authenticated"
+            m("div", { "id" : "g_id_onload", "data-auto_select" : "true", "data-client_id" : keys.web.client_id, "data-callback" : "handleCredentialResponse", "data-auto_prompt" : false}, []), //"data-login_uri" : "/authenticated"
             m("div", { "class" : "g_id_signin", "data-type" : "standard", "data-size" : "large", "data-theme" : "outline", "data-text" : "sign_in_with", "data-shape" : "rectangular", "data-logo_alignment" : "left" }, [])
             
             //m("div", { "id" : "signinBtn", "class" : "g-signin2", "data-onsuccess" : "handleCredentialResponse" }, [])
@@ -91453,6 +91620,38 @@ var LoginView = {
 }
 
 module.exports = LoginView;
+
+/***/ }),
+
+/***/ "./src/views/ReportsView.js":
+/*!**********************************!*\
+  !*** ./src/views/ReportsView.js ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
+var BottomNavBar = __webpack_require__(/*! ./components/BottomNavBar */ "./src/views/components/BottomNavBar.js");
+var ModalModel = __webpack_require__(/*! ../models/ModalModel */ "./src/models/ModalModel.js");
+var ModalComponent = __webpack_require__(/*! ./components/ModalComponent */ "./src/views/components/ModalComponent.js");
+
+var ReportsView = {
+    oninit : function(vnode) {
+        
+    },
+    
+    view : function(vnode) {
+        console.log("Reports view");
+        
+        return m("div", {}, [
+            m("p", {}, "TBD"),
+            m(BottomNavBar),
+            ModalModel.show ? m(ModalComponent) : []
+        ]);
+    }
+}
+
+module.exports = ReportsView;
 
 /***/ }),
 
@@ -91535,9 +91734,14 @@ var BottomNavBar = {
                     ]),
                     m("div", { class : "col" }, [
                         m(m.route.Link, { href : "/configuration" }, [
-                            m("i", { class : "bi bi-gear-fill" }, [])
+                            m("i", { class : "bi bi-gear" }, [])
                         ])
-                    ])
+                    ]),
+                    m("div", { class : "col" }, [
+                        m(m.route.Link, { href : "/reports" }, [
+                            m("i", { class : "bi bi-clipboard-data" }, [])
+                        ])
+                    ]),
                 ])
             ])
         ])
@@ -91611,8 +91815,12 @@ var InventoryFilterComponent = {
                         FilterSuggestionModel.suggest(InventoryFilterModel.filterText);
                     }, "onblur" : function(e) {
                         FilterSuggestionModel.show = false;
-                    } })
-                ])
+                    } }),
+                    m("button", { class : "btn btn-link", onclick : function(e) { InventoryFilterModel.showFilters = !InventoryFilterModel.showFilters; console.log(InventoryFilterModel.showFilters); m.redraw(); } }, [
+                        m("i", { class : "bi " + (InventoryFilterModel.showFilters ? "bi-funnel-fill" : "bi-funnel")})
+                    ])
+                ]),
+                    
             ]),
             m(FilterSuggestionComponent)
         ])
@@ -91634,6 +91842,7 @@ var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
 var InventoryModel = __webpack_require__(/*! ../../models/InventoryModel */ "./src/models/InventoryModel.js");
 var AddNewInventoryItemComponent = __webpack_require__(/*! ./AddNewInventoryItemComponent */ "./src/views/components/AddNewInventoryItemComponent.js");
 var InventoryFilterModel = __webpack_require__(/*! ../../models/InventoryFilterModel */ "./src/models/InventoryFilterModel.js");
+var PreferencesModel = __webpack_require__(/*! ../../models/PreferencesModel */ "./src/models/PreferencesModel.js");
 var moment = __webpack_require__(/*! moment */ "./node_modules/moment/moment.js");
 
 var InventoryListComponent = {
@@ -91647,6 +91856,48 @@ var InventoryListComponent = {
             ? m("div", { class : "col" }, [
                 "Loading..."
             ] )
+            : InventoryFilterModel.showFilters
+            ? m("div", { class : "col position-relative" }, [
+                m("div", { class : "mt-4" }, [ 
+                    m("label", { "for" : "showByStatusBtnGroup", class : "pt-3" }, [
+                                "Hide items with the following statuses:"
+                    ]),
+                    m("div", { class : "form-group" }, [
+                        m("div", { class : "btn-group", "id" : "hideByStatusBtnGroup", "role" : "group" }, [
+                            m("button", { class : "btn " + (PreferencesModel.hideListed ? "btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hideListed = !PreferencesModel.hideListed;
+                                PreferencesModel.save();
+                            }  }, [ "Listed" ]),
+                            m("button", { class : "btn " + (PreferencesModel.hidePending ? "btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hidePending = !PreferencesModel.hidePending;
+                                PreferencesModel.save();
+                            }  }, [ "Pending" ]),
+                            m("button", { class : "btn " + (PreferencesModel.hideSold ? "btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hideSold = !PreferencesModel.hideSold;
+                                PreferencesModel.save();
+                            }  }, [ "Sold" ]),
+                            m("button", { class : "btn " + (PreferencesModel.hideDonated ? "btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hideDonated = !PreferencesModel.hideDonated;
+                                PreferencesModel.save();
+                            }  }, [ "Donated" ]),
+                            m("button", { class : "btn " + (PreferencesModel.hideDisposed ? " btn-primary" : "btn-light"), "onclick" : function(e) {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                PreferencesModel.hideDisposed = !PreferencesModel.hideDisposed;
+                                PreferencesModel.save();
+                            }  }, [ "Disposed" ])
+                        ])
+                    ]),
+                ])
+            ])
             : m("div", { class : "col position-relative" }, [
                 m("div", { class : "mt-4 list-group list-group-flush"}, [
                     InventoryModel.inventory.map(function(item) {
