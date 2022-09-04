@@ -309,10 +309,12 @@ var EditItemView = {
                                         ])
                                     ])
                                 ]),
-                                PhotosModel.photos.map(function(photo) {
+                                PhotosModel.photos.map(function(photo, index) {
                                     return m("li", { class : "list-group-item border-0 pe-0" }, [
                                         m("div", { class : "thumbnail-container border border-secondary rounded" }, [
-                                            m("img", { class : "thumbnail", "src" : photo }, [])
+                                            m("img", { class : "thumbnail", "src" : photo.data, onclick : function(e) {
+                                                PhotosModel.photos.splice(index, 1);
+                                            } }, [])
                                         ])
                                     ])
                                 })

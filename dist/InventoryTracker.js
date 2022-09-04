@@ -90445,6 +90445,7 @@ module.exports = InventoryFilterModel;
 var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
 var moment = __webpack_require__(/*! moment */ "./node_modules/moment/moment.js");
 var AuthenticationModel = __webpack_require__(/*! ./AuthenticationModel */ "./src/models/AuthenticationModel.js");
+var PhotosModel = __webpack_require__(/*! ./PhotosModel */ "./src/models/PhotosModel.js");
 
 var InventoryItemModel = {
     name : null,
@@ -90507,6 +90508,20 @@ var InventoryItemModel = {
                 InventoryItemModel.disposed = results.item.disposed;
                 InventoryItemModel.disposed_dt = moment(results.item.disposed_dt).format("L");
                 
+                InventoryItemModel.photos = results.item.photos;
+                
+                PhotosModel.photos = [];
+                
+                InventoryItemModel.photos.forEach(function(photo, index) {
+                    var result = "";
+                    var array = photo.data.data;
+                    for (var i = 0; i < array.length; i++) {
+                        result += String.fromCharCode(parseInt(array[i]));
+                    }
+                    photo.data = result;
+                    PhotosModel.photos.push(photo);
+                });
+
                 InventoryItemModel.tags = results.item.tags;
             } else {
                 InventoryItemModel.newItem();
@@ -90539,6 +90554,8 @@ var InventoryItemModel = {
                     disposed : InventoryItemModel.disposed,
                     disposed_dt  :InventoryItemModel.disposed_dt,
                     
+                    photos : PhotosModel.photos,
+                    
                     tags : InventoryItemModel.tags
                 },
             });
@@ -90563,6 +90580,7 @@ var InventoryItemModel = {
                     donated_dt : InventoryItemModel.donated_dt,
                     disposed : InventoryItemModel.disposed,
                     disposed_dt  :InventoryItemModel.disposed_dt,
+                    photos : PhotosModel.photos,
                     
                     tags : InventoryItemModel.tags
                 },
@@ -90639,6 +90657,18 @@ var InventoryModel = {
             console.log(results);
             if( results.status=="success" ) {
                 InventoryModel.inventory = results.results;
+                
+                InventoryModel.inventory.forEach(function(item, index) {
+                    if( item.photos && item.photos.length>0 ) {
+                        var result = "";
+                        var array = item.photos[0].data.data;
+                        for (var i = 0; i < array.length; i++) {
+                            result += String.fromCharCode(parseInt(array[i]));
+                        }
+                        item.thumbnail = result;
+                    }
+                });
+                
                 InventoryModel.error = null;
                 
                 console.log(InventoryModel.inventory);
@@ -90676,6 +90706,24 @@ module.exports = ModalModel;
 
 /***/ }),
 
+/***/ "./src/models/PhotoModel.js":
+/*!**********************************!*\
+  !*** ./src/models/PhotoModel.js ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
+
+var PhotoModel = {
+    itemId : null,
+    data : null
+};
+
+module.exports = PhotoModel;
+
+/***/ }),
+
 /***/ "./src/models/PhotosModel.js":
 /*!***********************************!*\
   !*** ./src/models/PhotosModel.js ***!
@@ -90684,6 +90732,7 @@ module.exports = ModalModel;
 /***/ (function(module, exports, __webpack_require__) {
 
 var m = __webpack_require__(/*! mithril */ "./node_modules/mithril/index.js");
+var PhotoModel = __webpack_require__(/*! ./PhotoModel */ "./src/models/PhotoModel.js");
 
 var PhotosModel = {
     photos : []
@@ -90942,12 +90991,56 @@ var CapturePhotoView = function() {
                     context.drawImage(video, 0, 0, width, height);
                     
                     var data = canvas.toDataURL('image/png');
-                    PhotosModel.photos.push(data);
-                    m.redraw();
+                    var ratio = width/64;
+                    console.log("Resizing image from " + width + "x" + height + " to " + parseInt(width/ratio) + "x" + parseInt(height/ratio));
+                    resizedDataURL(data, parseInt(width/ratio), parseInt(height/ratio)).then(function(data) {
+                        console.log(data);
+                        var photo = {
+                            itemId : null,
+                            data : data
+                        }
+                        PhotosModel.photos.push(photo);
+                        m.redraw();
+                    });
+                    
                     //photo.setAttribute('src', data);
                 } else {
                   clearphoto();
                 }
+            }
+            
+            // Takes a data URI and returns the Data URI corresponding to the resized image at the wanted size.
+            function resizedDataURL(datas, wantedWidth, wantedHeight) {
+                var promise = new Promise(function(resolve, reject) {
+                    // We create an image to receive the Data URI
+                    var img = document.createElement('img');
+            
+                    // When the event "onload" is triggered we can resize the image.
+                    img.onload = function() {        
+                        // We create a canvas and get its context.
+                        var canvas = document.createElement('canvas');
+                        var ctx = canvas.getContext('2d');
+        
+                        // We set the dimensions at the wanted size.
+                        canvas.width = wantedWidth;
+                        canvas.height = wantedHeight;
+        
+                        // We resize the image with the canvas method drawImage();
+                        ctx.drawImage(this, 0, 0, wantedWidth, wantedHeight);
+        
+                        var dataURI = canvas.toDataURL();
+        
+                        /////////////////////////////////////////
+                        // Use and treat your Data URI here !! //
+                        /////////////////////////////////////////
+                        resolve(dataURI);
+                    };
+            
+                    // We put the Data URI in the image's src attribute
+                    img.src = datas;    
+                });
+                
+                return promise;
             }
         },
         
@@ -90968,7 +91061,7 @@ var CapturePhotoView = function() {
                     "Photos: " + PhotosModel.photos.length
                 ]),
                 PhotosModel.photos.map(function(photo) {
-                    return m("img", { "class" : "thumbnail", "src" : photo }, [])
+                    return m("img", { "class" : "thumbnail", "src" : photo.data }, [])
                 })
             ])
         }
@@ -91333,10 +91426,12 @@ var EditItemView = {
                                         ])
                                     ])
                                 ]),
-                                PhotosModel.photos.map(function(photo) {
+                                PhotosModel.photos.map(function(photo, index) {
                                     return m("li", { class : "list-group-item border-0 pe-0" }, [
                                         m("div", { class : "thumbnail-container border border-secondary rounded" }, [
-                                            m("img", { class : "thumbnail", "src" : photo }, [])
+                                            m("img", { class : "thumbnail", "src" : photo.data, onclick : function(e) {
+                                                PhotosModel.photos.splice(index, 1);
+                                            } }, [])
                                         ])
                                     ])
                                 })
@@ -91907,6 +92002,7 @@ var InventoryListComponent = {
                         //     }
                         // }
                         if( InventoryFilterModel.matchesItem(item) ) {
+                            console.log(item);
                             return m("a", { class : "list-group-item list-group-item-action ", "href" : "#", "itemID" : item.id, "onclick" : function(e) {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -91917,8 +92013,8 @@ var InventoryListComponent = {
                                 m("div", { class : "row" }, [
                                     m("div", { class : "col-3" }, [
                                         m("div", { class : "thumbnail position-relative bg-light", "style" : "width: 64px; height: 64px"}, [
-                                            item.thumbnail 
-                                                ? m("img", { "src" : "data:image/jpg ;base64, " + item.thumbnail }, [])
+                                            (item.thumbnail)
+                                                ? m("img", { "class" : "thumbnail", "src" : item.thumbnail }, [])
                                                 : m("i", { "class" : "fs-1 position-absolute top-50 start-50 translate-middle bi bi-question-circle" }, [])
                                         ]),
                                     ]),

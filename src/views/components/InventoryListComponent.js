@@ -67,6 +67,7 @@ var InventoryListComponent = {
                         //     }
                         // }
                         if( InventoryFilterModel.matchesItem(item) ) {
+                            console.log(item);
                             return m("a", { class : "list-group-item list-group-item-action ", "href" : "#", "itemID" : item.id, "onclick" : function(e) {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -77,8 +78,8 @@ var InventoryListComponent = {
                                 m("div", { class : "row" }, [
                                     m("div", { class : "col-3" }, [
                                         m("div", { class : "thumbnail position-relative bg-light", "style" : "width: 64px; height: 64px"}, [
-                                            item.thumbnail 
-                                                ? m("img", { "src" : "data:image/jpg ;base64, " + item.thumbnail }, [])
+                                            (item.thumbnail)
+                                                ? m("img", { "class" : "thumbnail", "src" : item.thumbnail }, [])
                                                 : m("i", { "class" : "fs-1 position-absolute top-50 start-50 translate-middle bi bi-question-circle" }, [])
                                         ]),
                                     ]),

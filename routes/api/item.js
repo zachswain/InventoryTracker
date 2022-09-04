@@ -5,8 +5,9 @@ const Item = require("../../models/Item");
 const Database = require("../../db");
 const Tag = require("../../models/Tag");
 const TagDefinition = require("../../models/TagDefinition");
+const Photo = require("../../models/Photo");
 
-itemRouter.put("/", bodyParser.json(), async function(req, res) {
+itemRouter.put("/", bodyParser.json({ extended : true, limit : "5mb" }), async function(req, res) {
     console.log("PUT /api/item/ route");
     
     try
@@ -42,6 +43,18 @@ itemRouter.put("/", bodyParser.json(), async function(req, res) {
                 }
             });
             
+            var photos = req.body.photos;
+            
+            await photos.forEach(async function(photo, index) {
+                photo.ItemId = item.id;
+                try {
+                    await Photo.create(photo);
+                }
+                catch( err ) {
+                    res.json({ status : "error", message : err });
+                }
+            })
+            
             await item.reload();
             res.json({ "status" : "success", "item" : item });
         } else {
@@ -54,7 +67,7 @@ itemRouter.put("/", bodyParser.json(), async function(req, res) {
 
 });
 
-itemRouter.post("/:id", bodyParser.json(), async function(req, res) {
+itemRouter.post("/:id", bodyParser.json({ extended : true, limit : "5mb" }), async function(req, res) {
    console.log("post /api/item/:id route");
    
    try
@@ -94,6 +107,29 @@ itemRouter.post("/:id", bodyParser.json(), async function(req, res) {
                     await Tag.create(tag);
                 }
                 catch( err ) {
+                    res.json({ status : "error", message : err });
+                }
+            });
+            
+            item.photos.forEach(function(photo) {
+                console.log("deleting photo");
+                console.log(photo);
+                photo.destroy();
+            });
+            
+            var photos = req.body.photos;
+            
+            await photos.forEach(async function(photo, index) {
+                let p = {
+                    ItemId : item.id,
+                    data : photo.data
+                };
+                
+                try {
+                    console.log("creating photo");
+                    console.log(p);
+                    await Photo.create(p);
+                } catch( err ) {
                     res.json({ status : "error", message : err });
                 }
             });

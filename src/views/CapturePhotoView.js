@@ -74,12 +74,56 @@ var CapturePhotoView = function() {
                     context.drawImage(video, 0, 0, width, height);
                     
                     var data = canvas.toDataURL('image/png');
-                    PhotosModel.photos.push(data);
-                    m.redraw();
+                    var ratio = width/64;
+                    console.log("Resizing image from " + width + "x" + height + " to " + parseInt(width/ratio) + "x" + parseInt(height/ratio));
+                    resizedDataURL(data, parseInt(width/ratio), parseInt(height/ratio)).then(function(data) {
+                        console.log(data);
+                        var photo = {
+                            itemId : null,
+                            data : data
+                        }
+                        PhotosModel.photos.push(photo);
+                        m.redraw();
+                    });
+                    
                     //photo.setAttribute('src', data);
                 } else {
                   clearphoto();
                 }
+            }
+            
+            // Takes a data URI and returns the Data URI corresponding to the resized image at the wanted size.
+            function resizedDataURL(datas, wantedWidth, wantedHeight) {
+                var promise = new Promise(function(resolve, reject) {
+                    // We create an image to receive the Data URI
+                    var img = document.createElement('img');
+            
+                    // When the event "onload" is triggered we can resize the image.
+                    img.onload = function() {        
+                        // We create a canvas and get its context.
+                        var canvas = document.createElement('canvas');
+                        var ctx = canvas.getContext('2d');
+        
+                        // We set the dimensions at the wanted size.
+                        canvas.width = wantedWidth;
+                        canvas.height = wantedHeight;
+        
+                        // We resize the image with the canvas method drawImage();
+                        ctx.drawImage(this, 0, 0, wantedWidth, wantedHeight);
+        
+                        var dataURI = canvas.toDataURL();
+        
+                        /////////////////////////////////////////
+                        // Use and treat your Data URI here !! //
+                        /////////////////////////////////////////
+                        resolve(dataURI);
+                    };
+            
+                    // We put the Data URI in the image's src attribute
+                    img.src = datas;    
+                });
+                
+                return promise;
             }
         },
         
@@ -100,7 +144,7 @@ var CapturePhotoView = function() {
                     "Photos: " + PhotosModel.photos.length
                 ]),
                 PhotosModel.photos.map(function(photo) {
-                    return m("img", { "class" : "thumbnail", "src" : photo }, [])
+                    return m("img", { "class" : "thumbnail", "src" : photo.data }, [])
                 })
             ])
         }

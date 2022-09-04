@@ -10,6 +10,7 @@ module.exports = {
 const Sequelize = require("sequelize")
 const Database = require("../db");
 const Tag = require("./Tag");
+const Photo = require("./Photo");
 
 Object.assign(module.exports, {
     model : {
@@ -86,6 +87,7 @@ Object.assign(module.exports, {
     
     relationships : [
         { modelName : Tag.modelName, relationship : "hasMany", as : "tags" },
+        { modelName : Photo.modelName, relationship : "hasMany", as : "photos" }
         //{ modelName : Sector.modelName, relationship : "belongsTo" },
         //{ modelName : Port.modelName, relationship : "belongsTo" }
     ],

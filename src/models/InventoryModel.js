@@ -20,6 +20,18 @@ var InventoryModel = {
             console.log(results);
             if( results.status=="success" ) {
                 InventoryModel.inventory = results.results;
+                
+                InventoryModel.inventory.forEach(function(item, index) {
+                    if( item.photos && item.photos.length>0 ) {
+                        var result = "";
+                        var array = item.photos[0].data.data;
+                        for (var i = 0; i < array.length; i++) {
+                            result += String.fromCharCode(parseInt(array[i]));
+                        }
+                        item.thumbnail = result;
+                    }
+                });
+                
                 InventoryModel.error = null;
                 
                 console.log(InventoryModel.inventory);

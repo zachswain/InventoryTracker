@@ -1,6 +1,7 @@
 var m = require("mithril");
 var moment = require("moment");
 var AuthenticationModel = require("./AuthenticationModel");
+var PhotosModel = require("./PhotosModel");
 
 var InventoryItemModel = {
     name : null,
@@ -63,6 +64,20 @@ var InventoryItemModel = {
                 InventoryItemModel.disposed = results.item.disposed;
                 InventoryItemModel.disposed_dt = moment(results.item.disposed_dt).format("L");
                 
+                InventoryItemModel.photos = results.item.photos;
+                
+                PhotosModel.photos = [];
+                
+                InventoryItemModel.photos.forEach(function(photo, index) {
+                    var result = "";
+                    var array = photo.data.data;
+                    for (var i = 0; i < array.length; i++) {
+                        result += String.fromCharCode(parseInt(array[i]));
+                    }
+                    photo.data = result;
+                    PhotosModel.photos.push(photo);
+                });
+
                 InventoryItemModel.tags = results.item.tags;
             } else {
                 InventoryItemModel.newItem();
@@ -95,6 +110,8 @@ var InventoryItemModel = {
                     disposed : InventoryItemModel.disposed,
                     disposed_dt  :InventoryItemModel.disposed_dt,
                     
+                    photos : PhotosModel.photos,
+                    
                     tags : InventoryItemModel.tags
                 },
             });
@@ -119,6 +136,7 @@ var InventoryItemModel = {
                     donated_dt : InventoryItemModel.donated_dt,
                     disposed : InventoryItemModel.disposed,
                     disposed_dt  :InventoryItemModel.disposed_dt,
+                    photos : PhotosModel.photos,
                     
                     tags : InventoryItemModel.tags
                 },
